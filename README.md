@@ -15,6 +15,7 @@ Spatial Data Converter is a web application that allows users to convert spatial
 
 - Frontend:
   - React
+  - NextJS
   - TypeScript
   - Tailwind CSS
   - shadcn/ui components
