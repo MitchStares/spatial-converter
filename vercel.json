@@ -1,8 +1,0 @@
-{
-  "env": {
-    "GCP_PROJECT_ID": "@gcp_project_id",
-    "GCP_BUCKET_NAME": "@gcp_bucket_name",
-    "GCP_CREDENTIALS": "@gcp_credentials",
-    "CONVERSION_FUNCTION_URL": "@conversion_function_url"
-  }
-}
