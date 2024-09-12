@@ -36,33 +36,64 @@ export default function SpatialDataConverter() {
       return
     }
 
-    setStatus("Uploading and converting...")
+    setStatus("Generating upload URL...")
     setProgress(0)
 
-    const formData = new FormData()
-    formData.append('file', file)
-    formData.append('inputFormat', inputFormat)
-    formData.append('outputFormat', outputFormat)
-    formData.append('inputCRS', inputCRS)
-    formData.append('outputCRS', outputCRS)
-    formData.append('simplification', simplification[0].toString())
-
     try {
-      const response = await fetch('/api/convert', {
+      // Get signed URL
+      const urlResponse = await fetch('/api/convert', {
         method: 'POST',
-        body: formData,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fileName: file.name }),
       })
 
-      if (!response.ok) {
+      if (!urlResponse.ok) {
+        throw new Error('Failed to get upload URL')
+      }
+
+      const { uploadUrl, fileId, fileName } = await urlResponse.json()
+
+      // Upload file directly to GCS
+      setStatus("Uploading file...")
+      const uploadResponse = await fetch(uploadUrl, {
+        method: 'PUT',
+        body: file,
+        headers: {
+          'Content-Type': file.type,
+        },
+      })
+
+      if (!uploadResponse.ok) {
+        throw new Error('Failed to upload file')
+      }
+
+      setStatus("File uploaded. Starting conversion...")
+
+      // Trigger conversion
+      const conversionResponse = await fetch(process.env.CONVERSION_FUNCTION_URL || '', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fileId,
+          fileName,
+          outputFormat,
+          inputFormat,
+          inputCRS,
+          outputCRS,
+          simplification: simplification[0],
+        }),
+      })
+
+      if (!conversionResponse.ok) {
         throw new Error('Conversion failed')
       }
 
-      const result = await response.json()
+      const result = await conversionResponse.json()
       setStatus("Conversion complete!")
       setDownloadUrl(result.downloadUrl)
     } catch (error) {
-      setStatus("Error during conversion. Please try again.")
-      console.error('Conversion error:', error)
+      setStatus("Error during process. Please try again.")
+      console.error('Error:', error)
     }
 
     setProgress(100)
