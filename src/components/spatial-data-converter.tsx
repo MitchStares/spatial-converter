@@ -60,7 +60,9 @@ export default function SpatialDataConverter() {
         body: file,
         headers: {
           'Content-Type': file.type,
+          'Origin': window.location.origin,
         },
+        mode: 'cors',  // Add this line
       })
 
       if (!uploadResponse.ok) {
@@ -70,9 +72,13 @@ export default function SpatialDataConverter() {
       setStatus("File uploaded. Starting conversion...")
 
       // Trigger conversion
-      const conversionResponse = await fetch(process.env.CONVERSION_FUNCTION_URL || '', {
+      const conversionResponse = await fetch(process.env.NEXT_PUBLIC_CONVERSION_FUNCTION_URL || '', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Origin': window.location.origin,
+        },
+        mode: 'cors',
         body: JSON.stringify({
           fileId,
           fileName,
@@ -85,15 +91,22 @@ export default function SpatialDataConverter() {
       })
 
       if (!conversionResponse.ok) {
-        throw new Error('Conversion failed')
+        const errorText = await conversionResponse.text();
+        console.error('Conversion failed:', errorText);
+        throw new Error(`Conversion failed: ${errorText}`);
       }
 
-      const result = await conversionResponse.json()
-      setStatus("Conversion complete!")
-      setDownloadUrl(result.downloadUrl)
+      const result = await conversionResponse.json();
+      if (result.error) {
+        console.error('Conversion error:', result.error, result.traceback);
+        throw new Error(result.error);
+      }
+
+      setStatus("Conversion complete!");
+      setDownloadUrl(result.downloadUrl);
     } catch (error) {
-      setStatus("Error during process. Please try again.")
-      console.error('Error:', error)
+      console.error('Error:', error);
+      setStatus(`Error during conversion: ${error.message}`);
     }
 
     setProgress(100)
