@@ -57,7 +57,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       res.status(200).json({ uploadUrl: url, fileId, fileName: fullFileName })
     } catch (error) {
       console.error('Error:', error)
-      res.status(500).json({ error: 'Error generating signed URL', details: error.message })
+      res.status(500).json({ 
+        error: 'Error generating signed URL', 
+        details: error instanceof Error ? error.message : String(error) 
+      })
     }
   })
 }

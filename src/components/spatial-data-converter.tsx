@@ -106,7 +106,7 @@ export default function SpatialDataConverter() {
       setDownloadUrl(result.downloadUrl);
     } catch (error) {
       console.error('Error:', error);
-      setStatus(`Error during conversion: ${error.message}`);
+      setStatus(`Error during conversion: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
 
     setProgress(100)
